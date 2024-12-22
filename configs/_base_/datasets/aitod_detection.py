@@ -59,7 +59,7 @@ test_pipeline = [
 
 ## version 3
 train_dataloader = dict(
-    batch_size=12,
+    batch_size=22,
     num_workers=12,
     persistent_workers=True,  # Avoid recreating subprocesses after each iteration
     sampler=dict(type='DefaultSampler', shuffle=True),  # Default sampler, supports both distributed and non-distributed training
@@ -73,8 +73,8 @@ train_dataloader = dict(
         pipeline=train_pipeline))
 # In version 3.x, validation and test dataloaders can be configured independently
 val_dataloader = dict(
-    batch_size=12,
-    num_workers=2,
+    batch_size=22,
+    num_workers=20,
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),
@@ -87,8 +87,8 @@ val_dataloader = dict(
         pipeline=test_pipeline))
 
 test_dataloader = dict(
-    batch_size=12,
-    num_workers=2,
+    batch_size=22,
+    num_workers=20,
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),

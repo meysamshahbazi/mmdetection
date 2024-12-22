@@ -2,11 +2,14 @@ from operator import gt
 from turtle import back
 import torch
 import random
+from typing import Optional, Union
+
 
 from ..builder import BBOX_ASSIGNERS
 from ..builder import build_iou_calculator
 from .assign_result import AssignResult
 from .base_assigner import BaseAssigner
+from mmengine.structures import InstanceData
 
 
 
@@ -61,7 +64,12 @@ class HieAssigner(BaseAssigner):
         self.ratio = ratio
         self.inside = inside
 
-    def assign(self, bboxes, gt_bboxes, gt_bboxes_ignore=None, gt_labels=None):
+    # def assign(self, bboxes, gt_bboxes, gt_bboxes_ignore=None, gt_labels=None):
+    def assign(self,
+            pred_instances: InstanceData,
+            gt_instances: InstanceData,
+            gt_instances_ignore: Optional[InstanceData] = None,
+            **kwargs):
         """Assign gt to bboxes.
 
         This method assign a gt bbox to every bbox (proposal/anchor), each bbox
@@ -94,6 +102,18 @@ class HieAssigner(BaseAssigner):
             >>> expected_gt_inds = torch.LongTensor([1, 0])
             >>> assert torch.all(assign_result.gt_inds == expected_gt_inds)
         """
+
+        bboxes = pred_instances.priors
+
+        gt_bboxes = gt_instances.bboxes
+
+        gt_labels = gt_instances.labels
+        
+        if gt_instances_ignore is not None:
+            gt_bboxes_ignore = gt_instances_ignore.bboxes
+        else:
+            gt_bboxes_ignore = None
+
         assign_on_cpu = True if (self.gpu_assign_thr > 0) and (
             gt_bboxes.shape[0] > self.gpu_assign_thr) else False
         # compute overlap and assign gt on CPU when number of GT is large

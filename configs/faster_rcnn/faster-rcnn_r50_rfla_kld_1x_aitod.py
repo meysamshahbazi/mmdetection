@@ -1,5 +1,4 @@
 _base_ = [
-    # '../_base_/models/faster-rcnn_r50_fpn.py',
     '../_base_/datasets/aitod_detection.py',
     '../_base_/schedules/schedule_1x.py', 
     '../_base_/default_runtime.py'
@@ -13,7 +12,7 @@ model = dict(
         std=[58.395, 57.12, 57.375],
         bgr_to_rgb=True,
         pad_size_divisor=32),
-        
+
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -72,7 +71,7 @@ model = dict(
     train_cfg=dict(
         rpn=dict(
             assigner=dict(
-                type='HieAssigner', # Hierarchical Label Assigner (HLA)
+                type='HieAssigner'        , # Hierarchical Label Assigner (HLA)
                 ignore_iof_thr=-1,
                 gpu_assign_thr=512,
                 iou_calculator=dict(type='BboxDistanceMetric'),

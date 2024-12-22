@@ -19,8 +19,11 @@ from .sim_ota_assigner import SimOTAAssigner
 from .task_aligned_assigner import TaskAlignedAssigner
 from .topk_hungarian_assigner import TopkHungarianAssigner
 from .uniform_assigner import UniformAssigner
+from .hierarchical_assigner import HieAssigner
+from .metric_calculator import BboxDistanceMetric
 
 __all__ = [
+    'HieAssigner','BboxDistanceMetric',
     'BaseAssigner', 'BinaryFocalLossCost', 'MaxIoUAssigner',
     'ApproxMaxIoUAssigner', 'AssignResult', 'PointAssigner', 'ATSSAssigner',
     'CenterRegionAssigner', 'GridAssigner', 'HungarianAssigner',

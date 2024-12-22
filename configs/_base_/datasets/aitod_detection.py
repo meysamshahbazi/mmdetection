@@ -7,7 +7,10 @@ train_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Resize', scale=(800, 800), keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
-    dict(type='PackDetInputs', meta_keys=[])
+    dict(
+        type='PackDetInputs',
+        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                   'scale_factor')),
 ]
 """ 
 ## version 2 
@@ -122,6 +125,7 @@ val_evaluator = dict(
     ann_file=data_root + 'annotations/small_test_v1_1.0.json',
     metric=['bbox'],
     format_only=False)
+test_evaluator = val_evaluator
 
 """ 
 # version 2

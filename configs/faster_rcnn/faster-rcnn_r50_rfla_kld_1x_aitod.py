@@ -13,6 +13,7 @@ model = dict(
         std=[58.395, 57.12, 57.375],
         bgr_to_rgb=True,
         pad_size_divisor=32),
+        
     backbone=dict(
         type='ResNet',
         depth=50,

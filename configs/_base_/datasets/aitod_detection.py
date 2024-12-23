@@ -36,7 +36,7 @@ test_pipeline = [
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
                    'scale_factor')),
-    dict(type='ImageToTensor', keys=['img']),
+    # dict(type='ImageToTensor', keys=['img']),
 ]
 """ 
 ## version 2
@@ -59,7 +59,7 @@ test_pipeline = [
 
 ## version 3
 train_dataloader = dict(
-    batch_size=22,
+    batch_size=20,
     num_workers=12,
     persistent_workers=True,  # Avoid recreating subprocesses after each iteration
     sampler=dict(type='DefaultSampler', shuffle=True),  # Default sampler, supports both distributed and non-distributed training
@@ -87,7 +87,7 @@ val_dataloader = dict(
         pipeline=test_pipeline))
 
 test_dataloader = dict(
-    batch_size=22,
+    batch_size=44,
     num_workers=20,
     persistent_workers=True,
     drop_last=False,

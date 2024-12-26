@@ -1,11 +1,19 @@
 dataset_type = 'AITODDataset'
 data_root = 'data/AI-TOD/aitod/'
 
+image_size = (320, 320)
+
 ## version 3
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', scale=(800, 800), keep_ratio=True),
+    # dict(type='Resize', scale=(800, 800), keep_ratio=True),
+    dict(
+        type='RandomCrop',
+        crop_type='absolute_range',
+        crop_size=image_size,
+        allow_negative_crop=True),
+
     dict(type='RandomFlip', prob=0.5),
     dict(
         type='PackDetInputs',
@@ -30,8 +38,13 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='Resize', scale=(800, 800), keep_ratio=True),
-    dict(type='RandomFlip', prob=0.5),
+    dict(type='Resize', scale=image_size, keep_ratio=True),
+    # dict(
+    #     type='RandomCrop',
+    #     crop_type='absolute_range',
+    #     crop_size=image_size,
+    #     allow_negative_crop=True),
+    # dict(type='RandomFlip', prob=0.5),
     dict(
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
@@ -59,7 +72,7 @@ test_pipeline = [
 
 ## version 3
 train_dataloader = dict(
-    batch_size=20,
+    batch_size=64,
     num_workers=12,
     persistent_workers=True,  # Avoid recreating subprocesses after each iteration
     sampler=dict(type='DefaultSampler', shuffle=True),  # Default sampler, supports both distributed and non-distributed training
@@ -69,11 +82,14 @@ train_dataloader = dict(
         data_root=data_root,
         ann_file='annotations/small_trainval_v1_1.0.json',
         data_prefix=dict(img='images/trainval/'),
-        filter_cfg=dict(filter_empty_gt=True, min_size=32),
+        filter_cfg=dict(filter_empty_gt=True, min_size=0),
         pipeline=train_pipeline))
 # In version 3.x, validation and test dataloaders can be configured independently
+
+
+
 val_dataloader = dict(
-    batch_size=22,
+    batch_size=96,
     num_workers=20,
     persistent_workers=True,
     drop_last=False,
@@ -87,7 +103,7 @@ val_dataloader = dict(
         pipeline=test_pipeline))
 
 test_dataloader = dict(
-    batch_size=44,
+    batch_size=96,
     num_workers=20,
     persistent_workers=True,
     drop_last=False,

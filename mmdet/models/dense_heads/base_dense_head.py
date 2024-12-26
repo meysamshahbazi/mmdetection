@@ -197,6 +197,36 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
         predictions = self.predict_by_feat(
             *outs, batch_img_metas=batch_img_metas, rescale=rescale)
         return predictions
+    
+    def predict2(self,
+                x: Tuple[Tensor],
+                batch_data_samples: SampleList,
+                rescale: bool = False) -> InstanceList:
+        """Perform forward propagation of the detection head and predict
+        detection results on the features of the upstream network.
+
+        Args:
+            x (tuple[Tensor]): Multi-level features from the
+                upstream network, each is a 4D-tensor.
+            batch_data_samples (List[:obj:`DetDataSample`]): The Data
+                Samples. It usually includes information such as
+                `gt_instance`, `gt_panoptic_seg` and `gt_sem_seg`.
+            rescale (bool, optional): Whether to rescale the results.
+                Defaults to False.
+
+        Returns:
+            list[obj:`InstanceData`]: Detection results of each image
+            after the post process.
+        """
+        batch_img_metas = [
+            data_samples.metainfo for data_samples in batch_data_samples
+        ]
+
+        outs = self(x)
+
+        # predictions = self.predict_by_feat(
+        #     *outs, batch_img_metas=batch_img_metas, rescale=rescale)
+        return outs
 
     def predict_by_feat(self,
                         cls_scores: List[Tensor],

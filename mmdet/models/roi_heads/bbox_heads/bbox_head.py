@@ -551,7 +551,6 @@ class BBoxHead(BaseModule):
         bboxes = get_box_tensor(bboxes)
         box_dim = bboxes.size(-1)
         bboxes = bboxes.view(num_rois, -1)
-
         if rcnn_test_cfg is None:
             # This means that it is aug test.
             # It needs to return the raw results without nms.

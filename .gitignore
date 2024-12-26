@@ -124,4 +124,6 @@ work_dirs/
 
 outputs/*
 demo/*
+output_detection.png
+mmdeploy_models/*
 

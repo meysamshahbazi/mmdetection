@@ -361,6 +361,45 @@ def delta2bbox(rois: Tensor,
     return bboxes
 
 
+def dynamic_clip_for_onnx(x1, y1, x2, y2, max_shape):
+    """Clip boxes dynamically for onnx.
+
+    Since torch.clamp cannot have dynamic `min` and `max`, we scale the
+      boxes by 1/max_shape and clamp in the range [0, 1].
+
+    Args:
+        x1 (Tensor): The x1 for bounding boxes.
+        y1 (Tensor): The y1 for bounding boxes.
+        x2 (Tensor): The x2 for bounding boxes.
+        y2 (Tensor): The y2 for bounding boxes.
+        max_shape (Tensor or torch.Size): The (H,W) of original image.
+    Returns:
+        tuple(Tensor): The clipped x1, y1, x2, y2.
+    """
+    # assert isinstance(
+    #     max_shape,
+    #     torch.Tensor), '`max_shape` should be tensor of (h,w) for onnx'
+
+    # scale by 1/max_shape
+    x1 = x1 / max_shape[1]
+    y1 = y1 / max_shape[0]
+    x2 = x2 / max_shape[1]
+    y2 = y2 / max_shape[0]
+
+    # clamp [0, 1]
+    x1 = torch.clamp(x1, 0, 1)
+    y1 = torch.clamp(y1, 0, 1)
+    x2 = torch.clamp(x2, 0, 1)
+    y2 = torch.clamp(y2, 0, 1)
+
+    # scale back
+    x1 = x1 * max_shape[1]
+    y1 = y1 * max_shape[0]
+    x2 = x2 * max_shape[1]
+    y2 = y2 * max_shape[0]
+    return x1, y1, x2, y2
+
+
 def onnx_delta2bbox(rois: Tensor,
                     deltas: Tensor,
                     means: Sequence[float] = (0., 0., 0., 0.),
@@ -473,7 +512,8 @@ def onnx_delta2bbox(rois: Tensor,
     if clip_border and max_shape is not None:
         # clip bboxes with dynamic `min` and `max` for onnx
         if torch.onnx.is_in_onnx_export():
-            from mmdet.core.export import dynamic_clip_for_onnx
+            # from mmdet.core.export import dynamic_clip_for_onnx
+            # print(max_shape)
             x1, y1, x2, y2 = dynamic_clip_for_onnx(x1, y1, x2, y2, max_shape)
             bboxes = torch.stack([x1, y1, x2, y2], dim=-1).view(deltas.size())
             return bboxes

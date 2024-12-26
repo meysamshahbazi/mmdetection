@@ -62,6 +62,63 @@ class SingleRoIExtractor(BaseRoIExtractor):
         target_lvls = target_lvls.clamp(min=0, max=num_levels - 1).long()
         return target_lvls
 
+    def forward2(self,
+                feats: Tuple[Tensor],
+                rois: Tensor,
+                roi_scale_factor: Optional[float] = None):
+        """Extractor ROI feats.
+
+        Args:
+            feats (Tuple[Tensor]): Multi-scale features.
+            rois (Tensor): RoIs with the shape (n, 5) where the first
+                column indicates batch id of each RoI.
+            roi_scale_factor (Optional[float]): RoI scale factor.
+                Defaults to None.
+
+        Returns:
+            Tensor: RoI feature.
+        """
+        # convert fp32 to fp16 when amp is on
+        rois = rois.type_as(feats[0])
+        out_size = self.roi_layers[0].output_size
+        num_levels = len(feats)
+        roi_feats = feats[0].new_zeros(
+            rois.size(0), self.out_channels, *out_size)
+
+        # TODO: remove this when parrots supports
+        if torch.__version__ == 'parrots':
+            roi_feats.requires_grad = True
+
+        if num_levels == 1:
+            if len(rois) == 0:
+                return roi_feats
+            return self.roi_layers[0](feats[0], rois)
+
+        target_lvls = self.map_roi_levels(rois, num_levels)
+
+        if roi_scale_factor is not None:
+            rois = self.roi_rescale(rois, roi_scale_factor)
+
+        for i in range(num_levels):
+            mask = target_lvls == i
+            inds = mask.nonzero(as_tuple=False).squeeze(1)
+            # if inds.numel() > 0:
+            #     rois_ = rois[inds]
+            #     roi_feats_t = self.roi_layers[i](feats[i], rois_)
+            #     roi_feats[inds] = roi_feats_t
+            # else:
+            #     # Sometimes some pyramid levels will not be used for RoI
+            #     # feature extraction and this will cause an incomplete
+            #     # computation graph in one GPU, which is different from those
+            #     # in other GPUs and will cause a hanging error.
+            #     # Therefore, we add it to ensure each feature pyramid is
+            #     # included in the computation graph to avoid runtime bugs.
+            roi_feats += sum(
+                x.view(-1)[0]
+                for x in self.parameters()) * 0. + feats[i].sum() * 0.
+        return roi_feats
+    
+    # back up 
     def forward(self,
                 feats: Tuple[Tensor],
                 rois: Tensor,
@@ -101,6 +158,7 @@ class SingleRoIExtractor(BaseRoIExtractor):
 
         for i in range(num_levels):
             mask = target_lvls == i
+            #ONNX_CHANGE 
             inds = mask.nonzero(as_tuple=False).squeeze(1)
             if inds.numel() > 0:
                 rois_ = rois[inds]

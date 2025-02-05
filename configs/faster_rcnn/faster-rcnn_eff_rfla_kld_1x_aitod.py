@@ -8,36 +8,36 @@ _base_ = [
 # optimizer = dict(type='Adam', lr=0.001, weight_decay=0.0001 )
 
 # checkpoint = 'https://download.openmmlab.com/mmclassification/v0/efficientnet/efficientnet-b3_3rdparty_8xb32-aa_in1k_20220119-5b4887a0.pth'  # noqa
-optimizer = dict(type='Adam', lr=0.004, weight_decay=0.0001 )
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_interval=1)
+# optimizer = dict(type='Adam', lr=0.001, weight_decay=0.0001 )
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=100, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
 # learning rate
-# param_scheduler = [
-#     dict(
-#         type='LinearLR', start_factor=0.001, by_epoch=False, begin=0, end=500),
-#     dict(
-#         type='MultiStepLR',
-#         begin=0,
-#         end=12,
-#         by_epoch=True,
-#         milestones=[8, 11],
-#         gamma=0.1)
-# ]
+param_scheduler = [
+    dict(
+        type='LinearLR', start_factor=0.001, by_epoch=False, begin=0, end=500),
+    dict(
+        type='MultiStepLR',
+        begin=0,
+        end=12,
+        by_epoch=True,
+        milestones=[8, 11],
+        gamma=0.1)
+]
 
 # optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
-    optimizer=optimizer,
-    # dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+    # optimizer=optimizer,
+    optimizer=dict(type='SGD', lr=0.02/4, momentum=0.9, weight_decay=0.0001)
     )
 
 # Default setting for scaling LR automatically
 #   - `enable` means enable scaling LR automatically
 #       or not by default.
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
-auto_scale_lr = dict(enable=False, base_batch_size=16)
+# auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 
 
@@ -55,17 +55,6 @@ model = dict(
         bgr_to_rgb=True,
         pad_size_divisor=32),
 
-    # backbone=dict(
-    #     type='ResNet',
-    #     depth=50,
-    #     num_stages=4,
-    #     out_indices=(0, 1, 2, 3),
-    #     frozen_stages=1,
-    #     norm_cfg=dict(type='BN', requires_grad=True),
-    #     norm_eval=True,
-    #     style='pytorch',
-    #     init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
-
     backbone=dict(
         type='EfficientNet',
         arch='b0',
@@ -79,11 +68,19 @@ model = dict(
             type='Pretrained', prefix='backbone', checkpoint=checkpoint)),
 
     neck=dict(
-        type='FPN',
-        # in_channels=[256, 512, 1024, 2048],
+        type='BiFPN',
+        num_stages=3,
         in_channels=[40, 112, 320],
         out_channels=64,
-        num_outs=5),
+        start_level=0,
+        norm_cfg=norm_cfg),
+
+    # neck=dict(
+    #     type='FPN',
+    #     # in_channels=[256, 512, 1024, 2048],
+    #     in_channels=[40, 112, 320],
+    #     out_channels=64,
+    #     num_outs=5),
 
     rpn_head=dict(
         type='RPNHead',
@@ -99,8 +96,16 @@ model = dict(
             target_means=[.0, .0, .0, .0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+            type='FocalLoss',
+            use_sigmoid=True,
+            gamma=1.5,
+            alpha=0.25,
+            loss_weight=1.0),
+        loss_bbox=dict(type='HuberLoss', beta=0.1, loss_weight=50)),
+        # loss_cls=dict(
+        #     type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+        # loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+
         
     roi_head=dict(
         type='StandardRoIHead',

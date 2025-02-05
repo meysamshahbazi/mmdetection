@@ -9,6 +9,7 @@ from mmengine.runner import Runner
 
 from mmdet.utils import setup_cache_size_limit_of_dynamo
 
+import torch
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
@@ -58,6 +59,7 @@ def parse_args():
 
 
 def main():
+    # torch.autograd.set_detect_anomaly(True)
     args = parse_args()
 
     # Reduce the number of repeated compilations and improve

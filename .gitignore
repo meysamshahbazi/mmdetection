@@ -127,3 +127,5 @@ demo/*
 output_detection.png
 mmdeploy_models/*
 
+pth_file/*
+

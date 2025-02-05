@@ -143,6 +143,8 @@ class TwoStageDetector(BaseDetector):
         results = results + (roi_outs, )
         return results
 
+
+    
     def loss(self, batch_inputs: Tensor,
              batch_data_samples: SampleList) -> dict:
         """Calculate losses from a batch of inputs and data samples.

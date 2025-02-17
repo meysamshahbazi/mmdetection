@@ -36,9 +36,10 @@ from .xml_style import XMLDataset
 from .youtube_vis_dataset import YouTubeVISDataset
 from .aitod import AITODDataset
 from .visdrone import VisDrone
+from .xview_filterd import XviewFilterd
 
 __all__ = [
-    'AITODDataset','VisDrone',
+    'AITODDataset','VisDrone','XviewFilterd',
     'XMLDataset', 'CocoDataset', 'DeepFashionDataset', 'VOCDataset',
     'CityscapesDataset', 'LVISDataset', 'LVISV05Dataset', 'LVISV1Dataset',
     'WIDERFaceDataset', 'get_loading_pipeline', 'CocoPanopticDataset',

@@ -5,6 +5,8 @@ _base_ = [
 ]
 
 total_epochs = 600
+
+
 # learning rate
 param_scheduler = [
     dict(
@@ -26,8 +28,13 @@ lr_config = dict(
     warmup_ratio=1.0 / 3,
     target_lr=1e-7)
 # optimizer
-# optimizer=dict(type='AdamW', lr=0.0002, weight_decay=0.05)
-optimizer = dict(type='SGD',lr=0.0001, momentum=0.9, weight_decay=1e-4)
+# optimizer=dict(
+#         type='AdamW',
+#         lr=0.00001,
+#         betas=(0.9, 0.999),
+#         weight_decay=0.05)
+
+optimizer = dict(type='SGD',lr=0.0005, momentum=0.9, weight_decay=1e-5)
 
 optim_wrapper = dict(
     type='OptimWrapper',
@@ -45,7 +52,6 @@ test_cfg = dict(type='TestLoop')
 model = dict(
     type='TinyHRDet',
     init_cfg=dict(type='Pretrained', checkpoint='pth_file/tinydet_L.pth'),
-    norm_cfg=norm_cfg,
     data_preprocessor=dict(
         type='DetDataPreprocessor',
         mean=[123.675, 116.28, 103.53],
@@ -58,6 +64,7 @@ model = dict(
         out_indices=[5, 8, 14, 17, 19],
         norm_eval=False,
         norm_eps=1e-5,
+        # norm_cfg=norm_cfg,
         num_classes=1000,
         add_extra_stages=True,
         pretrained= 'pth_file/mobilenetv3_bc.pt',
@@ -96,8 +103,8 @@ model = dict(
         rpn_conv_groups=49,
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        # loss_bbox=dict(type='L1Loss', loss_weight=1.0)
-        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)
+        # loss_bbox=dict(type='L1Loss', loss_weight=8.0)
+        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=8.0)
         ),
     
 
@@ -121,13 +128,13 @@ model = dict(
                 target_means=[0., 0., 0., 0.],
                 target_stds=[0.1, 0.1, 0.2, 0.2]),
             reg_class_agnostic=True,
-            num_classes=11,
+            num_classes=5,
             # target_means=[0., 0., 0., 0.],
             # target_stds=[0.1, 0.1, 0.2, 0.2],
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            # loss_bbox=dict(type='L1Loss', loss_weight=1.0)
-            loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)
+            # loss_bbox=dict(type='L1Loss', loss_weight=8.0)
+            loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=8.0)
             ),
     ),
         
@@ -163,15 +170,13 @@ model = dict(
                 min_pos_iou=0.5,
                 ignore_iof_thr=-1),
             sampler=dict(
-                # type='RandomSampler', 
-                type='OHEMSampler',
+                type='OHEMSampler', # RandomSampler
                 num=512,
                 pos_fraction=0.25,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
             pos_weight=-1,
             debug=False)),
-
     test_cfg = dict(
 
         rpn=dict(
@@ -190,34 +195,71 @@ model = dict(
 )
 
     
-dataset_type = 'VisDrone'
-data_root = '/media/meysam/ssd1/VisDrone/VisDrone-DET/'
+dataset_type = 'XviewFilterd'
+data_root = '/media/meysam/ssd1/AI-TOD/512-size/xview/filtered/'
 
 image_size = (512, 512)
 
 ## version 3
+# crop_size: Optional[tuple] = None,
+#                  ratios: Optional[tuple] = (0.9, 1.0, 1.1),
+#                  border: Optional[int] = 128,
+#                  mean: Optional[Sequence] = None,
+#                  std: Optional[Sequence] = None,
+#                  to_rgb: Optional[bool] = None,
+#                  test_mode: bool = False,
+#                  test_pad_mode: Optional[tuple] = ('logical_or', 127),
+#                  test_pad_add_pix: int = 0,
+#                  bbox_clip_border: bool = True)
+
+
+# train_pipeline = [
+#     dict(type='LoadImageFromFile', to_float32=True),
+#     dict(type='LoadAnnotations', with_bbox=True),
+
+#     dict(type='RandomFlip', prob=0.5),
+    
+#     dict(
+#         type='RandomCrop',
+#         crop_type='absolute',
+#         crop_size=image_size,
+#         allow_negative_crop=False,
+#         recompute_bbox = True),
+
+#     dict(
+#         type='PackDetInputs',
+#         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+#                    'scale_factor')),
+# ]
+
+# test_pipeline = [
+#     dict(type='LoadImageFromFile'),
+#     # dict(type='LoadAnnotations', with_bbox=True),
+#     dict(type='Resize', scale=image_size, keep_ratio=True),
+#     # dict(
+#     #     type='RandomCrop',
+#     #     crop_type='absolute',
+#     #     crop_size=image_size,
+#     #     allow_negative_crop=False,
+#     #     recompute_bbox = True),
+#     dict(
+#         type='PackDetInputs',
+#         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+#                    'scale_factor')),
+# ]
+
+
 train_pipeline = [
     dict(type='LoadImageFromFile', 
         #  backend_args={{_base_.backend_args}}
          ),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(
-        type='PhotoMetricDistortion',
-        brightness_delta=32,
-        contrast_range=(0.5, 1.5),
-        saturation_range=(0.5, 1.5),
-        hue_delta=18),
-    
-    dict(type='RandomAffine',
-        max_rotate_degree = 15.0,
-        max_translate_ratio = 0.1,
-        scaling_ratio_range= (0.9, 1.1),
-        max_shear_degree = 2.0,
-        border = (0, 0),
-        border_val = (114, 114, 114),
-        bbox_clip_border = True
-        ),
-
+    # dict(
+    #     type='PhotoMetricDistortion',
+    #     brightness_delta=32,
+    #     contrast_range=(0.5, 1.5),
+    #     saturation_range=(0.5, 1.5),
+    #     hue_delta=18),
     # dict(
     #     type='RandomCenterCropPad',
     #     # The cropped images are padded into squares during training,
@@ -245,7 +287,7 @@ train_pipeline = [
     #     min_crop_size=0.5),
 
     # Make sure the output is always crop_size.
-    dict(type='Resize', scale=image_size, keep_ratio=False),
+    dict(type='Resize', scale=image_size, keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
     dict(type='PackDetInputs')
 ]
@@ -255,8 +297,8 @@ test_pipeline = [
         type='LoadImageFromFile',
         # backend_args={{_base_.backend_args}},
         to_float32=True),
+    dict(type='Resize', scale=image_size, keep_ratio=True),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', scale=image_size, keep_ratio=False),
     dict(
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape', 'border', 'scale_factor'))
@@ -277,8 +319,8 @@ train_dataloader = dict(
         type=dataset_type,
         data_root=data_root,
         ann_file='train.json',
-        data_prefix=dict(img=''),
-        # filter_cfg=dict(filter_empty_gt=True, min_size=0),
+        data_prefix=dict(img='images/'),
+        filter_cfg=dict(filter_empty_gt=True, min_size=0),
         pipeline=train_pipeline))
 # In version 3.x, validation and test dataloaders can be configured independently
 
@@ -294,12 +336,13 @@ val_dataloader = dict(
         type=dataset_type,
         data_root=data_root,
         ann_file='val.json',
-        data_prefix=dict(img=''),
+        data_prefix=dict(img='images/'),
+        filter_cfg=dict(filter_empty_gt=True, min_size=0),
         test_mode=True,
         pipeline=test_pipeline))
 
 test_dataloader = dict(
-    batch_size=64,
+    batch_size=32,
     num_workers=4,
     persistent_workers=True,
     drop_last=False,
@@ -308,7 +351,7 @@ test_dataloader = dict(
         type=dataset_type,
         data_root=data_root,
         ann_file='val.json',
-        data_prefix=dict(img=''),
+        data_prefix=dict(img='images/'),
         test_mode=True,
         pipeline=test_pipeline))
 
@@ -322,11 +365,6 @@ val_evaluator = dict(
     format_only=False)
 
 test_evaluator = val_evaluator
-
-
-
-
-
 
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
